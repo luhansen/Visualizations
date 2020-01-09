@@ -1,0 +1,143 @@
+---
+title: "Pré-processamento"
+output: html_notebook
+---
+
+```{r}
+library(readxl)
+library(stringr)
+```
+
+
+```{r}
+alunos_total <- read.delim("novos_dados1.csv", stringsAsFactors=FALSE)
+colnames(alunos_total)
+```
+
+renomear as colunas para inglês
+
+```{r}
+library(tidyverse)
+library(plyr)
+alunos_total <- alunos_total %>% 
+  plyr::rename(c(
+    'Min..Créd..Formatura' = 'Min.Graduation.Credits',
+    'Curso' = 'Course',
+    'Opção' = 'Option',
+    'UF.de.Nascimento' = 'UF.birth',
+    'Cotista' = 'Quota',
+    'Tipo.de.Escola' = 'School type',
+    'Raça' = 'Race',
+    'Período.de.saída.da.opção' = 'Leaving.option.period',
+    'Forma.de.saída.da.opção' = 'Leaving.option.form',
+    'Periodo.de.Ingresso.na.Unb' = 'Entrance.UnB.period',
+    'Periodo.de.ingresso.na.opção' = 'Entrance.option.period',
+    'Forma.de.Ingresso.na.UnB' = 'Entrance.option.form',
+    'Créditos.cursados.no.total' = 'Total.Credits',
+    'Créditos.integralizados.no.total' = 'Paid-in.credits'
+    ))
+```
+
+```{r}
+str(alunos_total)
+```
+
+
+problemas q devem ser arrumados: arrumar o curso q tah escrito errado
+
+Computer Licentiate, 205 from Computer Science, 118 from Mechatronics Engineering, 196 from Communication Network Engineering, 90 from Software Engineering and just 63 from Computer Engineering.
+
+```{r}
+for ( i in 0:length(alunos_total$Course)) {
+  alunos_total$Course[i] <- str_trim(alunos_total$Course[i])
+  alunos_total$Course[i] <- str_replace_all(alunos_total$Course[i], 'Engenharia de Redes de Comunica��o|Engenharia de Redes de Comunicação', 'Communication Network Engineering')
+  alunos_total$Course[i] <- str_replace_all(alunos_total$Course[i], 'Ciência da Computação', 'Computer Science')
+  alunos_total$Course[i] <- str_replace_all(alunos_total$Course[i], '^Computação', 'Computer Licentiate')
+  alunos_total$Course[i] <- str_replace_all(alunos_total$Course[i], 'Engenharia Mecatrônica', 'Mechatronics Engineering')
+  alunos_total$Course[i] <- str_replace_all(alunos_total$Course[i], 'Engenharia de Computação', 'Computer Engineering')
+  alunos_total$Course[i] <- str_replace_all(alunos_total$Course[i], 'Engenharia de Software', 'Software Engineering')
+}
+```
+
+```{r}
+unique(select(alunos_total, Course))
+```
+
+traduzir e arrumar a opção
+```{r}
+for ( i in 0:length(alunos_total$Option)) {
+  alunos_total$Option[i] <- str_trim(alunos_total$Option[i])
+  alunos_total$Option[i] <- str_replace_all(alunos_total$Option[i], "Engenharia de Redes de Comunica��o|ENGENHARIA DE REDES DE COMUNICA��O|Engenharia de Redes de Comunicação", "Communication Network Engineering")
+  alunos_total$Option[i] <- str_replace_all(alunos_total$Option[i], "CIÊNCIA DA COMPUTAÇÂO|Ciência da Computação", "Computer Science")
+  alunos_total$Option[i] <- str_replace_all(alunos_total$Option[i], "Engenharia de Controle e Automação|Engenharia Mecatrônica", "Mechatronics Engineering")
+  alunos_total$Option[i] <- str_replace_all(alunos_total$Option[i], '^Computação', 'Computer Licentiate')
+  alunos_total$Option[i] <- str_replace_all(alunos_total$Option[i], 'Engenharia de Computação', 'Computer Engineering')
+  alunos_total$Option[i] <- str_replace_all(alunos_total$Option[i], 'Engenharia de Software', 'Software Engineering')
+}
+```
+
+
+```{r}
+unique(select(alunos_total, Option))
+```
+
+
+arrumar forma de saida
+```{r}
+for ( i in 0:length(alunos_total$Leaving.option.form)) {
+  alunos_total$Leaving.option.form[i] <- str_trim(alunos_total$Leaving.option.form [i])
+  alunos_total$Leaving.option.form[i] <- str_replace_all(alunos_total$Leaving.option.form [i], "Novo Vestibular|Deslig.*|Mudan�a de Curso|Transferencia|Vestibular p/outra Habilita��o|Mudan�a de Turno|Repr 3 vezes na mesma disc obr", 'Drop out')
+  alunos_total$Leaving.option.form[i] <- str_replace_all(alunos_total$Leaving.option.form [i], "Ativo", 'Active')
+  alunos_total$Leaving.option.form[i] <- str_replace_all(alunos_total$Leaving.option.form [i], "Formatura", 'Graduated')
+  alunos_total$Leaving.option.form[i] <- str_replace_all(alunos_total$Leaving.option.form [i], "Outros", 'Others')
+  alunos_total$Leaving.option.form[i] <- str_replace_all(alunos_total$Leaving.option.form [i], "Falecimento", 'Death')
+}
+```
+
+```{r}
+unique(select(alunos_total, Leaving.option.form))
+```
+
+tirar a palavra Aluno do Id aluno
+```{r}
+length(alunos_total$ID.Aluno)
+for ( i in 0:length(alunos_total$ID.Aluno)) {
+  alunos_total$ID.Aluno[i] <- str_trim(alunos_total$ID.Aluno[i])
+  alunos_total$ID.Aluno[i] <- str_replace_all(alunos_total$ID.Aluno[i], "Aluno ", '')
+}
+```
+
+
+```{r}
+alunos <- select(alunos_total, 1:14, 17:20)
+materias <- select(alunos_total, 22:24)
+materia_aluno <- select(alunos_total, 1, 15, 16, 22, 25, 21)
+```
+
+```{r}
+str(alunos)
+```
+
+
+
+
+```{r}
+library(dplyr)
+
+meninas <- filter(alunos, Sexo == 'F')
+meninas_unicas_u <- unique(meninas)
+
+meninos <-filter(alunos, Sexo == 'M')
+meninos_unicos_u <- unique(meninos)
+```
+
+não precisa passar por todo o pré-processamento para ter todos os dados, basta ler do arquivo: all.csv
+
+```{r}
+write.csv(alunos_total, "all.csv", row.names = FALSE)
+write.csv(meninas_unicas_u, "meninas.csv", row.names = FALSE)
+write.csv(meninos_unicos_u, "meninos.csv", row.names = FALSE)
+write.csv(materias, "materia.csv", row.names = FALSE)
+write.csv(materia_aluno, "materia_aluno.csv", row.names = FALSE)
+```
+

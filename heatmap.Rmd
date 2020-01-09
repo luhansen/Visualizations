@@ -1,0 +1,38 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+https://rpubs.com/melinatarituba/353262
+
+```{r}
+meninas_bin <- read.delim("make_binary/meninasbin.csv", stringsAsFactors=FALSE, sep=";")
+meninos_bin <- read.delim("make_binary/meninosbin.csv", stringsAsFactors=FALSE, sep=";")
+```
+
+```{r}
+numerico <- meninas_bin[,4:17]
+```
+
+
+
+```{r}
+knitr::kable(cor(numerico))
+```
+```{r}
+pairs(numerico)
+```
+
+
+```{r}
+library(corrplot)
+# primeiro fazemos a matriz de correlação
+M <- cor(numerico)
+corrplot(M, method = "circle")
+
+```
+
+```{r}
+corrplot(M, order = "hclust", addrect = 3, tl.pos="d")
+```
+
+
